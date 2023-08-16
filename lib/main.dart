@@ -33,7 +33,7 @@ typedef WeatherEmoji = String;
 
 Future<WeatherEmoji> getWeather(City city) {
   return Future.delayed(
-      const Duration(seconds: 1),
+      const Duration(milliseconds: 500),
       () => {
             City.stockholm: '❄️',
             City.paris: '🌧️',
@@ -67,34 +67,45 @@ class HomePage extends ConsumerWidget {
       weatherProvider,
     );
 
-   return Scaffold(
-  appBar: AppBar(
-    title: const Text('Weather'),
-  ),
-  body: Column(
-    children: [
-      Expanded(
-        child: ListView.builder(
-          itemCount: City.values.length,
-          itemBuilder: (context, index) {
-            final city = City.values[index];
-            final isSelected = city == ref.watch(currentCityProvider).state,
-            return ListTile(
-              title: Text(city.toString()),
-              trailing: isSelected ? const Icon(Icons.check) : null,
-              onTap: () {
-                ref.read(
-                  currentCityProvider
-                  )
-                  .state = city,
-              },
-            );
-          },
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Weather'),
       ),
-    ],
-  ),
-);
-
+      body: Column(
+        children: [
+          currentWeather.when(
+            data: (data) => Text(
+              data,
+              style: const TextStyle(
+                fontSize: 40
+              ),
+            ),
+            error: (_, __) => const Text('Error 🌞'),
+            loading: () => const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
+            ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: City.values.length,
+              itemBuilder: (context, index) {
+                final city = City.values[index];
+                final selectedCity = ref.watch(currentCityProvider.notifier).state;
+                final isSelected = city == selectedCity;
+                return ListTile(
+                  title: Text(city.toString()),
+                  trailing: isSelected ? const Icon(Icons.check) : null,
+                  onTap: () {
+                    ref.read(currentCityProvider.notifier).state =
+                        city; // Use .notifier here
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
